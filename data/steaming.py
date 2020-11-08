@@ -14,6 +14,8 @@ class StreamingForexPrices(object):
         self.account_id = account_id
         self.instruments = instruments
         self.events_queue = events_queue
+        self.cur_bid = None
+        self.cur_ask = None
 
     def connect_to_stream(self):
         try:
@@ -46,5 +48,7 @@ class StreamingForexPrices(object):
                     time = msg["tick"]["time"]
                     bid = msg["tick"]["bid"]
                     ask = msg["tick"]["ask"]
+                    self.cur_bid = bid
+                    self.cur_ask = ask
                     tev = TickEvent(instrument, time, bid, ask)
                     self.events_queue.put(tev)

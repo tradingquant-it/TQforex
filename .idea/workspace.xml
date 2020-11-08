@@ -1,7 +1,23 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="376043b3-9196-41ba-ac7e-41e3742bb00c" name="Default Changelist" comment="" />
+    <list default="true" id="376043b3-9196-41ba-ac7e-41e3742bb00c" name="Default Changelist" comment="">
+      <change afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backtest/backtest.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backtest/output.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/price.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/portfolio/__init__.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/portfolio/portfolio.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/portfolio/position.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/steaming.py" beforeDir="false" afterPath="$PROJECT_DIR$/data/steaming.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/event/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/event/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/event/events.py" beforeDir="false" afterPath="$PROJECT_DIR$/event/events.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/settings/settings.py" beforeDir="false" afterPath="$PROJECT_DIR$/settings/settings.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/strategy/strategy.py" beforeDir="false" afterPath="$PROJECT_DIR$/strategy/strategy.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/trading.py" beforeDir="false" afterPath="$PROJECT_DIR$/trading/trading.py" afterDir="false" />
+    </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -15,12 +31,22 @@
       </list>
     </option>
   </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
   <component name="ProjectId" id="1joYKGkKelTSjTV60XKHtzZ6fez" />
+  <component name="ProjectLevelVcsManager" settingsEditedManually="true">
+    <ConfirmationsSetting value="2" id="Add" />
+  </component>
   <component name="PropertiesComponent">
-    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
+    <property name="SHARE_PROJECT_CONFIGURATION_FILES" value="true" />
+    <property name="last_opened_file_path" value="$USER_HOME$/lavoro" />
     <property name="settings.editor.selected.configurable" value="com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable" />
   </component>
   <component name="RecentsManager">
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="C:\Users\Gianluca.Giaccaglia\DataTrading\DTForex\trading" />
+    </key>
     <key name="CopyFile.RECENT_KEYS">
       <recent name="C:\Users\Gianluca.Giaccaglia\DataTrading\DTForex\strategy" />
     </key>
@@ -49,5 +75,16 @@
       <updated>1604471845113</updated>
     </task>
     <servers />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
   </component>
 </project>
