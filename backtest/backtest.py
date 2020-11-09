@@ -1,108 +1,76 @@
-import copy, sys
-import queue
-import threading
-import time
-from decimal import Decimal, getcontext
+import time, queue
 
-from execution import SimulatedExecution
-from portfolio import Portfolio
 from settings import settings
-from strategy import TestStrategy
-from data.price import HistoricCSVPriceHandler
 
-
-def trade(events, strategy, portfolio, execution, heartbeat):
+class Backtest(object):
     """
-    Esegue un ciclo while infinito che esegue il polling
-    della coda degli eventi e indirizza ogni evento al
-    componente della strategia del gestore di esecuzione.
-    Il ciclo si fermerà quindi per "heartbeat" secondi
-    e continuerà.
+    Incaspula le impostazioni e le componenti per eseguire un backtest
+    event-driven per il mercato del Forex.
     """
-    while True:
-        try:
-            event = events.get(False)
-        except queue.Empty:
-            pass
-        else:
-            if event is not None:
-                if event.type == 'TICK':
-                    strategy.calculate_signals(event)
-                elif event.type == 'SIGNAL':
-                    portfolio.execute_signal(event)
-                elif event.type == 'ORDER':
-                    execution.execute_order(event)
-        time.sleep(heartbeat)
-
-
-def backtest(events, ticker, strategy, portfolio,
-        execution, heartbeat, max_iters=200000
+    def __init__(
+        self, pairs, data_handler, strategy,
+        strategy_params, portfolio, execution,
+        equity=100000.0, heartbeat=0.0,
+        max_iters=10000000000
     ):
-    """
-    Esegue un ciclo while infinito che esegue il polling
-    della coda degli eventi e indirizza ogni evento al
-    componente della strategia del gestore di esecuzione.
-    Il ciclo si fermerà quindi per "heartbeat" secondi
-    e continuerà fino a quando si supera il numero massimo
-    di iterazioni.
-    """
-    iters = 0
-    while True and iters < max_iters:
-        ticker.stream_next_tick()
-        try:
-            event = events.get(False)
-        except queue.Empty:
-            pass
-        else:
-            if event is not None:
-                if event.type == 'TICK':
-                    strategy.calculate_signals(event)
-                elif event.type == 'SIGNAL':
-                    portfolio.execute_signal(event)
-                elif event.type == 'ORDER':
-                    execution.execute_order(event)
-        time.sleep(heartbeat)
-        iters += 1
-    portfolio.output_results()
-
-
-if __name__ == "__main__":
-    # Imposta il numero di decimali a 2
-    getcontext().prec = 2
-
-    heartbeat = 0.0  # mezzo secondo tra ogni polling
-    events = queue.Queue()
-    equity = settings.EQUITY
-
-    # Carica il file CSV dei dati storici
-    pairs = ["EURUSD"]
-    csv_dir = settings.CSV_DATA_DIR
-    if csv_dir is None:
-        print("No historic data directory provided - backtest terminating.")
-        sys.exit()
-
-    # Crea la classe di streaming dei dati storici di tick
-    prices = HistoricCSVPriceHandler(pairs, events, csv_dir)
-
-    # Crea il generatore della strategia/signale, passando lo
-    # strumento e la coda degli eventi
-    strategy = TestStrategy(pairs[0], events)
-
-    # Crea l'oggetto portfolio per tracciare i trade
-    portfolio = Portfolio(prices, events, equity=equity)
-
-    # Crea il gestore di esecuzione simulato
-    execution = SimulatedExecution()
-
-    # Crea due thread separati: uno per il ciclo di trading
-    # e un'altro per la classe di streaming dei prezzi di mercato
-    trade_thread = threading.Thread(
-        target=trade, args=(
-            events, strategy, portfolio, execution, heartbeat
+        """
+        Inizializza il backtest.
+        """
+        self.pairs = pairs
+        self.events = queue.Queue()
+        self.csv_dir = settings.CSV_DATA_DIR
+        self.ticker = data_handler(self.pairs, self.events, self.csv_dir)
+        self.strategy_params = strategy_params
+        self.strategy = strategy(
+            self.pairs, self.events, **self.strategy_params
         )
-    )
-    price_thread = threading.Thread(target=prices.stream_to_queue, args=[])
+        self.equity = equity
+        self.heartbeat = heartbeat
+        self.max_iters = max_iters
+        self.portfolio = portfolio(
+            self.ticker, self.events, equity=self.equity, backtest=True
+        )
+        self.execution = execution()
 
-    # Avvia entrambi i thread
-    trade_thread.start()
-    price_thread.start()
+    def _run_backtest(self):
+        """
+        Esegue un ciclo while infinito che esegue il polling
+        della coda degli eventi e indirizza ogni evento al
+        componente della strategia del gestore di esecuzione.
+        Il ciclo si fermerà quindi per "heartbeat" secondi
+        e continuerà fino a quando si supera il numero massimo
+        di iterazioni.
+        """
+        print("Running Backtest...")
+        iters = 0
+        while iters < self.max_iters and self.ticker.continue_backtest:
+            try:
+                event = self.events.get(False)
+            except queue.Empty:
+                self.ticker.stream_next_tick()
+            else:
+                if event is not None:
+                    if event.type == 'TICK':
+                        self.strategy.calculate_signals(event)
+                        self.portfolio.update_portfolio(event)
+                    elif event.type == 'SIGNAL':
+                        self.portfolio.execute_signal(event)
+                    elif event.type == 'ORDER':
+                        self.execution.execute_order(event)
+            time.sleep(self.heartbeat)
+            iters += 1
+
+    def _output_performance(self):
+        """
+        Visualizza le performance della strategia dal backtest.
+        """
+        print("Calculating Performance Metrics...")
+        self.portfolio.output_results()
+
+    def simulate_trading(self):
+        """
+        Simula il backtest e visualizza le performance del portfolio.
+        """
+        self._run_backtest()
+        self._output_performance()
+        print("Backtest complete.")

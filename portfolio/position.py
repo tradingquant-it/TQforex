@@ -3,24 +3,32 @@ from decimal import Decimal, getcontext, ROUND_HALF_DOWN
 
 class Position(object):
     def __init__(
-        self, position_type, market,
-        units, exposure, bid, ask
+            self, home_currency, position_type,
+            currency_pair, units, ticker
     ):
         self.position_type = position_type  # Long o short
-        self.market = market
+        self.home_currency = home_currency
+        self.currency_pair = currency_pair
         self.units = units
-        self.exposure = Decimal(str(exposure))
+        self.ticker = ticker
+        self.set_up_currencies()
+        self.profit_base = self.calculate_profit_base()
+        self.profit_perc = self.calculate_profit_perc()
 
-        # Long o short
+    def set_up_currencies(self):
+        self.base_currency = self.currency_pair[:3]
+        self.quote_currency = self.currency_pair[3:]
+
+        self.quote_home_currency_pair = "%s%s" % (self.quote_currency, self.home_currency)
+
+        ticker_cur = self.ticker.prices[self.currency_pair]
         if self.position_type == "long":
-            self.avg_price = Decimal(str(ask))
-            self.cur_price = Decimal(str(bid))
+            self.avg_price = Decimal(str(ticker_cur["ask"]))
+            self.cur_price = Decimal(str(ticker_cur["bid"]))
         else:
-            self.avg_price = Decimal(str(bid))
-            self.cur_price = Decimal(str(ask))
+            self.avg_price = Decimal(str(ticker_cur["bid"]))
+            self.cur_price = Decimal(str(ticker_cur["ask"]))
 
-        self.profit_base = self.calculate_profit_base(self.exposure)
-        self.profit_perc = self.calculate_profit_perc(self.exposure)
 
     def calculate_pips(self):
         mult = Decimal("1")
@@ -35,23 +43,29 @@ class Position(object):
 
     def calculate_profit_base(self, exposure):
         pips = self.calculate_pips()
-        return (pips * exposure / self.cur_price).quantize(
-            Decimal("0.00001"), ROUND_HALF_DOWN
-        )
-
-    def calculate_profit_perc(self, exposure):
-        return (self.profit_base / exposure * Decimal("100.00")).quantize(
-            Decimal("0.00001"), ROUND_HALF_DOWN
-        )
-
-    def update_position_price(self, bid, ask, exposure):
+        ticker_qh = self.ticker.prices[self.quote_home_currency_pair]
         if self.position_type == "long":
-            self.cur_price = Decimal(str(bid))
+            qh_close = ticker_qh["bid"]
         else:
-            self.cur_price = Decimal(str(ask))
-        self.profit_base = self.calculate_profit_base(exposure)
-        self.profit_perc = self.calculate_profit_perc(exposure)
+            qh_close = ticker_qh["ask"]
+        profit = pips * qh_close * self.units
+        return profit.quantize(
+            Decimal("0.00001"), ROUND_HALF_DOWN
+        )
 
+    def calculate_profit_perc(self):
+        return (self.profit_base / self.units * Decimal("100.00")).quantize(
+            Decimal("0.00001"), ROUND_HALF_DOWN
+        )
+
+    def update_position_price(self):
+        ticker_cur = self.ticker.prices[self.currency_pair]
+        if self.position_type == "long":
+            self.cur_price = Decimal(str(ticker_cur["bid"]))
+        else:
+            self.cur_price = Decimal(str(ticker_cur["ask"]))
+        self.profit_base = self.calculate_profit_base()
+        self.profit_perc = self.calculate_profit_perc()
 
     def add_units(self, units):
         cp = self.ticker.prices[self.currency_pair]
@@ -65,32 +79,44 @@ class Position(object):
         self.units = new_total_units
         self.update_position_price()
 
+    def add_units(self, units):
+        cp = self.ticker.prices[self.currency_pair]
+        if self.position_type == "long":
+            add_price = cp["ask"]
+        else:
+            add_price = cp["bid"]
+        new_total_units = self.units + units
+        new_total_cost = self.avg_price*self.units + add_price*units
+        self.avg_price = new_total_cost/new_total_units
+        self.units = new_total_units
+        self.update_position_price()
+
     def remove_units(self, units):
         dec_units = Decimal(str(units))
         ticker_cp = self.ticker.prices[self.currency_pair]
         ticker_qh = self.ticker.prices[self.quote_home_currency_pair]
         if self.position_type == "long":
-            remove_price = ticker_cp["ask"]
-            qh_close = ticker_qh["bid"]
-        else:
             remove_price = ticker_cp["bid"]
             qh_close = ticker_qh["ask"]
+        else:
+            remove_price = ticker_cp["ask"]
+            qh_close = ticker_qh["bid"]
         self.units -= dec_units
         self.update_position_price()
-        # Calcolo dele PnL
+        # Calculate PnL
         pnl = self.calculate_pips() * qh_close * dec_units
-        return pnl.quantize(Decimal("0.01", ROUND_HALF_DOWN))
+        getcontext().rounding = ROUND_HALF_DOWN
+        return pnl.quantize(Decimal("0.01"))
 
     def close_position(self):
         ticker_cp = self.ticker.prices[self.currency_pair]
         ticker_qh = self.ticker.prices[self.quote_home_currency_pair]
         if self.position_type == "long":
-            remove_price = ticker_cp["ask"]
-            qh_close = ticker_qh["bid"]
-        else:
-            remove_price = ticker_cp["bid"]
             qh_close = ticker_qh["ask"]
+        else:
+            qh_close = ticker_qh["bid"]
         self.update_position_price()
-        # Calcolo dele PnL
+        # Calculate PnL
         pnl = self.calculate_pips() * qh_close * self.units
-        return pnl.quantize(Decimal("0.01", ROUND_HALF_DOWN))
+        getcontext().rounding = ROUND_HALF_DOWN
+        return pnl.quantize(Decimal("0.01"))

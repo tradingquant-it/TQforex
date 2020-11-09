@@ -8,3 +8,4 @@ pyzmq
 pygments
 patsy
 statsmodels
+seaborn
