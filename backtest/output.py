@@ -1,3 +1,7 @@
+
+# codice python relativo al corso "TRADING AUTOMATICO SUL FOREX"
+# https://tradingquant.it/corsi/trading-automatico-sul-forex/
+
 import os, os.path
 
 import pandas as pd

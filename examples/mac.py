@@ -1,3 +1,6 @@
+# codice python relativo al corso "TRADING AUTOMATICO SUL FOREX"
+# https://tradingquant.it/corsi/trading-automatico-sul-forex/
+
 from backtest import Backtest
 from execution import SimulatedExecution
 from portfolio import Portfolio

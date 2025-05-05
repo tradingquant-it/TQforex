@@ -1,3 +1,7 @@
+
+# codice python relativo al corso "TRADING AUTOMATICO SUL FOREX"
+# https://tradingquant.it/corsi/trading-automatico-sul-forex/
+
 from copy import deepcopy
 from decimal import Decimal, getcontext, ROUND_HALF_DOWN
 import logging
